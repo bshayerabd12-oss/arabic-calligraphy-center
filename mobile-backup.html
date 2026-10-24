@@ -1,0 +1,103 @@
+﻿<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>مخطوطة الخط العربي</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=Aref+Ruqaa+Ink:wght@400;700&family=Cairo:wght@600;800&family=El+Messiri:wght@600;700&family=Katibeh:wght@400&family=Noto+Naskh+Arabic:wght@500;700&family=Scheherazade+New:wght@600;700&family=Vibes&display=swap" rel="stylesheet">
+  <style>
+    :root { --gold: #d4af37; }
+    * { box-sizing: border-box; }
+    body { margin: 0; width: 100%; height: 100svh; overflow: hidden; color: #f5ead1; background: #130c08 radial-gradient(circle at 50% 10%, rgba(212,175,55,.18), transparent 55%); font-family: Amiri, serif; }
+    button, select, textarea { font-family: inherit; }
+    .app { width: 100%; height: 100%; display: grid; grid-template-rows: auto auto minmax(190px, 40vh) auto; gap: 7px; padding: 8px 10px; overflow: hidden; }
+    header { text-align: center; }
+    header h1 { margin: 0; color: var(--gold); font-family: Cairo, sans-serif; font-size: clamp(19px, 3vw, 30px); }
+    header p { margin: 2px 0; color: #d9c28d; font-size: 13px; }
+    .controls, .keyboard { width: min(96vw, 1100px); justify-self: center; opacity: 0; pointer-events: none; transform: translateY(-8px); transition: .35s; }
+    .controls.visible, .keyboard.visible { opacity: 1; pointer-events: auto; transform: none; }
+    .controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 5px; }
+    .control { min-height: 32px; padding: 4px 7px; border: 1px solid rgba(212,175,55,.55); border-radius: 5px; color: #fff4d4; background: #3a240f; font-family: Cairo, sans-serif; font-size: 11px; }
+    .save { background: #80621f; border-color: var(--gold); }
+    .scroll-stage { position: relative; width: min(96vw, 1100px); height: 100%; justify-self: center; border-radius: 8px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,.55), inset 0 0 35px rgba(70,42,15,.45); background-color: #e8d0a0; background-image: radial-gradient(circle at 50% 45%, rgba(255,255,255,.48), rgba(138,90,43,.28)), linear-gradient(90deg, rgba(120,78,31,.12), transparent 20%, transparent 80%, rgba(120,78,31,.12)); }
+    .scroll-cover { position: absolute; z-index: 4; inset: 0; width: 100%; background: linear-gradient(90deg, #3b240f, #9a6938, #563417, #3b240f); transition: .9s; }
+    .scroll-stage.closed .scroll-cover { inset: 0; width: 100%; }
+    .scroll-stage.open .scroll-cover { inset: 0 50%; width: 0; }
+    .paper-area { position: absolute; z-index: 2; inset: 7% 10% 7%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .3s .7s; }
+    .scroll-stage.open .paper-area { opacity: 1; }
+    .paper-text { width: 100%; height: 100%; padding: 34px 10px 30px; border: 0; outline: 0; resize: none; overflow: hidden; overflow-wrap: anywhere; white-space: pre-wrap; background: transparent; color: #201206; font-family: Katibeh, serif; font-size: 4rem; font-weight: 700; line-height: 1.65; text-align: center; text-align-last: center; }
+    .paper-text::placeholder { color: rgba(85,58,28,.55); }
+    .start { position: absolute; z-index: 6; inset: 0; display: grid; place-items: center; }
+    .start button { padding: 10px 24px; border: 2px solid var(--gold); border-radius: 25px; color: #261609; background: linear-gradient(135deg,#bf953f,#fff0ac,#aa771c); font-family: Cairo, sans-serif; font-weight: 800; box-shadow: 0 5px 18px rgba(212,175,55,.35); }
+    .keyboard { display: flex; flex-direction: column; gap: 4px; padding: 7px; border: 1px solid rgba(212,175,55,.35); border-radius: 8px; background: rgba(14,7,3,.96); }
+    .keyboard-row { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; }
+    .keyboard-row.tashkeel { grid-template-columns: repeat(9, minmax(0, 1fr)); }
+    .key { min-height: 34px; padding: 2px; border: 1px solid #8a5a2b; border-radius: 5px; color: #2b1704; background: linear-gradient(180deg,#eedfb5,#d5bb84); box-shadow: 0 2px 0 #5c3a1e; font-size: 17px; font-weight: 700; }
+    .key:active { transform: translateY(2px); box-shadow: none; }
+    .key-tashkeel { color: #1a0f07; background: var(--gold); }
+    .key-action { color: #fff; background: #8a3b28; }
+    .key-space { grid-column: span 12; }
+    .font-naskh { font-family: "Noto Naskh Arabic","Amiri",serif !important; }
+    .font-tawaqee { font-family: Vibes,cursive !important; }
+    .font-ruqaa-ink { font-family: "Aref Ruqaa Ink",serif !important; }
+    .font-ruqae { font-family: "Aref Ruqaa",serif !important; }
+    .font-rayhan { font-family: "Scheherazade New",serif !important; }
+    .font-thuluth,.font-thuluth-jaly { font-family: Katibeh,serif !important; }
+    .font-thuluth-jaly { font-weight: 700; }
+    .font-jaly-diwani { font-family: "Scheherazade New",serif !important; font-style: italic; font-weight: 700; }
+    .font-diwani { font-family: Amiri,serif !important; font-style: italic; font-weight: 700; }
+    .font-muhaqqaq { font-family: "El Messiri",serif !important; font-weight: 700; }
+    .ink-black { color: #090705 !important; text-shadow: 0 0 1px #090705 !important; }
+    .ink-red-dark { color: #65140d !important; text-shadow: 0 0 1px rgba(101,20,13,.55) !important; }
+    .ink-gold { color: #765000 !important; text-shadow: 0 1px 0 rgba(255,228,155,.45) !important; }
+    @media(max-width:760px) {
+      .app { gap: 5px; padding: 6px; }
+      header h1 { font-size: 17px; }
+      header p { font-size: 11px; }
+      .control { font-size: 10px; }
+      .key { min-height: 32px; font-size: 16px; }
+      .paper-text { font-size: 3rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header><h1>مركز الأمير محمد بن سلمان للخط العربي</h1><p>اكتب اسمك بخطك المفضل وشكّله تلقائياً أو يدويًا</p></header>
+  <section class="controls" id="controls">
+    <select id="fontSelect" class="control">
+      <option value="font-naskh">النسخ</option><option value="font-tawaqee">التواقيع</option><option value="font-ruqaa-ink">الرقاع</option><option value="font-ruqae">الرقعة</option><option value="font-rayhan">الريحان</option><option value="font-thuluth">الثلث</option><option value="font-thuluth-jaly" selected>الثلث الجلي</option><option value="font-jaly-diwani">الجلي الديواني</option><option value="font-diwani">الديواني</option><option value="font-muhaqqaq">المحقق</option>
+    </select>
+    <select id="tashkeelMode" class="control"><option value="auto" selected>تشكيل تلقائي تقديري</option><option value="manual">تشكيل يدوي</option><option value="none">بدون تشكيل</option></select>
+    <select id="sizeSelect" class="control"><option value="auto">تلقائي</option><option value="3rem">صغير</option><option value="4.5rem" selected>متوسط</option><option value="6rem">كبير</option></select>
+    <select id="inkSelect" class="control"><option value="ink-black">أسود</option><option value="ink-red-dark">أحمر داكن</option><option value="ink-gold" selected>ذهبي غامق</option></select>
+    <button id="saveButton" class="control save" type="button">حفظ 📸</button><button id="clearButton" class="control" type="button">مسح</button>
+  </section>
+  <main class="scroll-stage open" id="scrollStage">
+    <div class="scroll-cover" aria-hidden="true"></div>
+    <div class="paper-area"><textarea id="paper" class="paper-text font-thuluth-jaly ink-gold" dir="rtl" spellcheck="false" placeholder="اكتب اسمك..." maxlength="600" inputmode="none" readonly></textarea></div>
+    <div class="start" id="start"><button id="openButton" type="button">افتح المخطوطة 📜</button></div>
+  </main>
+  <section class="keyboard" id="keyboard">
+    <div class="keyboard-row tashkeel"><button class="key key-tashkeel" data-char="َ">فتحة</button><button class="key key-tashkeel" data-char="ً">تنوين فتح</button><button class="key key-tashkeel" data-char="ُ">ضمة</button><button class="key key-tashkeel" data-char="ٌ">تنوين ضم</button><button class="key key-tashkeel" data-char="ِ">كسرة</button><button class="key key-tashkeel" data-char="ٍ">تنوين كسر</button><button class="key key-tashkeel" data-char="ْ">سكون</button><button class="key key-tashkeel" data-char="ّ">شدة</button><button class="key key-tashkeel" data-char="ٰ">خنجرية</button></div>
+    <div class="keyboard-row"><button class="key" data-char="ض">ض</button><button class="key" data-char="ص">ص</button><button class="key" data-char="ث">ث</button><button class="key" data-char="ق">ق</button><button class="key" data-char="ف">ف</button><button class="key" data-char="غ">غ</button><button class="key" data-char="ع">ع</button><button class="key" data-char="ه">ه</button><button class="key" data-char="خ">خ</button><button class="key" data-char="ح">ح</button><button class="key" data-char="ج">ج</button><button class="key" data-char="د">د</button></div>
+    <div class="keyboard-row"><button class="key" data-char="ش">ش</button><button class="key" data-char="س">س</button><button class="key" data-char="ي">ي</button><button class="key" data-char="ب">ب</button><button class="key" data-char="ل">ل</button><button class="key" data-char="ا">ا</button><button class="key" data-char="ت">ت</button><button class="key" data-char="ن">ن</button><button class="key" data-char="م">م</button><button class="key" data-char="ك">ك</button><button class="key" data-char="ط">ط</button><button class="key" data-char="ذ">ذ</button></div>
+    <div class="keyboard-row"><button class="key" data-char="ئ">ئ</button><button class="key" data-char="ء">ء</button><button class="key" data-char="ؤ">ؤ</button><button class="key" data-char="أ">أ</button><button class="key" data-char="إ">إ</button><button class="key" data-char="آ">آ</button><button class="key" data-char="ر">ر</button><button class="key" data-char="ز">ز</button><button class="key" data-char="و">و</button><button class="key" data-char="ة">ة</button><button class="key" data-char="ى">ى</button><button class="key key-action" data-action="backspace">مسح⌫</button></div>
+    <div class="keyboard-row"><button class="key key-space" data-char=" ">مسافة</button></div>
+  </section>
+</div>
+<script>
+const paper=document.querySelector('#paper'),stage=document.querySelector('#scrollStage'),start=document.querySelector('#start'),controls=document.querySelector('#controls'),keyboard=document.querySelector('#keyboard'),fontSelect=document.querySelector('#fontSelect'),tashkeelMode=document.querySelector('#tashkeelMode'),sizeSelect=document.querySelector('#sizeSelect'),inkSelect=document.querySelector('#inkSelect');let raw='';const marks=/[\u064B-\u0652]/g;
+function autoTashkeel(text){return text.split(/(\s+)/).map(word=>{if(/^\s+$/.test(word))return word;const clean=word.replace(marks,'');let out='';for(let i=0;i<clean.length;i++){const c=clean[i];out+=c;if('اوىيأإآ'.includes(c)||i===clean.length-1)continue;if(i===0)out+='َ';else if(i===1&&clean.length>3)out+='ْ'}return out}).join('')}
+function render(){let value=raw;if(tashkeelMode.value==='auto')value=autoTashkeel(raw);if(tashkeelMode.value==='none')value=raw.replace(marks,'');paper.value=value;updateStyle()}
+function insert(text){const position=paper.selectionStart||paper.value.length;const end=paper.selectionEnd||position;raw=raw.slice(0,position)+text+raw.slice(end);render();paper.setSelectionRange(position+text.length,position+text.length)}
+function updateStyle(){paper.className=`paper-text ${fontSelect.value} ${inkSelect.value}`;const len=[...paper.value.replace(marks,'')].length;const mobile=matchMedia('(max-width:760px)').matches;let size=sizeSelect.value==='auto'?(len<=8?(mobile?'3.2rem':'4.8rem'):len<=16?(mobile?'2.7rem':'3.6rem'):(mobile?'1.9rem':'2.4rem')):sizeSelect.value;if(mobile&&size==='3rem')size='2.6rem';if(mobile&&size==='4.5rem')size='3.2rem';if(mobile&&size==='6rem')size='3.8rem';paper.style.fontSize=size;paper.style.padding='34px 10px 30px';paper.style.lineHeight='1.65';paper.style.overflow='hidden'}
+document.querySelector('#openButton').addEventListener('click',()=>{start.style.transition='opacity .3s';start.style.opacity='0';setTimeout(()=>start.style.display='none',300);stage.classList.remove('closed');stage.classList.add('open');setTimeout(()=>{controls.classList.add('visible');keyboard.classList.add('visible')},800)});
+document.querySelector('#clearButton').addEventListener('click',()=>{raw='';paper.value='';updateStyle()});keyboard.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.char!==undefined)insert(b.dataset.char);if(b.dataset.action==='backspace'){raw=raw.slice(0,-1);render()}});
+[fontSelect,tashkeelMode,sizeSelect,inkSelect].forEach(s=>s.addEventListener('change',render));paper.addEventListener('input',()=>{raw=paper.value;render()});
+document.querySelector('#saveButton').addEventListener('click',async()=>{if(!paper.value.trim()||typeof html2canvas!=='function')return;await document.fonts.ready;const canvas=await html2canvas(stage,{scale:2,useCORS:true});const link=document.createElement('a');link.download=`مخطوطة_${Date.now()}.png`;link.href=canvas.toDataURL('image/png');link.click()});updateStyle();controls.classList.add('visible');keyboard.classList.add('visible');start.style.display='none';render();
+</script>
+</body>
+</html>
